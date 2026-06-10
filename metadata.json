@@ -1,0 +1,6 @@
+{
+  "name": "Dashboard Unit Swasta SPS PPD Gua Musang",
+  "description": "Dashboard pemantauan read-only untuk Unit Swasta, Sektor Pengurusan Sekolah, PPD Gua Musang.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

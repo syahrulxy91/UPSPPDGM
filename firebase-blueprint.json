@@ -1,0 +1,116 @@
+{
+  "entities": {
+    "Institusi": {
+      "title": "Institusi",
+      "description": "Institusi Pendidikan Swasta di bawah seliaan SPS PPD Gua Musang.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nama": { "type": "string" },
+        "kod": { "type": "string" },
+        "jenis": { "type": "string" },
+        "daerah": { "type": "string" },
+        "alamat": { "type": "string" },
+        "noTelefon": { "type": "string" },
+        "pendaftar": { "type": "string" },
+        "statusPendaftaran": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "nama", "jenis", "statusPendaftaran"]
+    },
+    "Pematuhan": {
+      "title": "Pematuhan",
+      "description": "Rekod pemeriksaan/pemberian pematuhan untuk Institusi Pendidikan Swasta.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "institusiId": { "type": "string" },
+        "institusiNama": { "type": "string" },
+        "tarikhPemeriksaan": { "type": "string" },
+        "pegawaiPemeriksa": { "type": "string" },
+        "statusPematuhan": { "type": "string" },
+        "catatan": { "type": "string" },
+        "aspekPematuhan": { "type": "object" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "institusiId", "statusPematuhan", "tarikhPemeriksaan"]
+    },
+    "Tindakan": {
+      "title": "Tindakan",
+      "description": "Rekod tindakan susulan, amaran, atau penambahbaikan.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "institusiId": { "type": "string" },
+        "pematuhanId": { "type": "string" },
+        "jenisTindakan": { "type": "string" },
+        "keterangan": { "type": "string" },
+        "tarikhRujukan": { "type": "string" },
+        "statusTindakan": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "institusiId", "jenisTindakan", "statusTindakan"]
+    },
+    "Borang": {
+      "title": "Borang",
+      "description": "Rekod permohonan borang rasmi Bahagian Pendidikan Swasta (BPS) KPM.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "noRujukan": { "type": "string" },
+        "institusiId": { "type": "string" },
+        "namaInstitusi": { "type": "string" },
+        "jenisBorang": { "type": "string" },
+        "tarikhKemuka": { "type": "string" },
+        "status": { "type": "string" },
+        "pegawai": { "type": "string" },
+        "jenisInstitusi": { "type": "string" },
+        "catatan": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "noRujukan", "institusiId", "namaInstitusi", "jenisBorang", "status"]
+    },
+    "Reminder": {
+      "title": "Reminder (Amaran)",
+      "description": "Rekod amaran atau isu tindakan pematuhan dijana oleh Cloud Functions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "entityType": { "type": "string" },
+        "entityId": { "type": "string" },
+        "ipsId": { "type": "string" },
+        "namaInstitusi": { "type": "string" },
+        "reminderType": { "type": "string" },
+        "severity": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "resolved": { "type": "boolean" },
+        "resolvedAt": { "type": "string" }
+      },
+      "required": ["id", "entityId", "ipsId", "reminderType", "severity", "title", "resolved"]
+    }
+  },
+  "firestore": {
+    "institusi/{institusiId}": {
+      "schema": "Institusi",
+      "description": "Koleksi rekod institusi pendidikan swasta."
+    },
+    "pematuhan/{pematuhanId}": {
+      "schema": "Pematuhan",
+      "description": "Koleksi rekod lawatan pematuhan institusi."
+    },
+    "tindakan/{tindakanId}": {
+      "schema": "Tindakan",
+      "description": "Koleksi rekod tindakan susulan institusi."
+    },
+    "borang/{borangId}": {
+      "schema": "Borang",
+      "description": "Koleksi rekod borang rasmi IPS BPS KPM."
+    },
+    "reminders/{reminderId}": {
+      "schema": "Reminder",
+      "description": "Koleksi amaran automasi backend."
+    }
+  }
+}
