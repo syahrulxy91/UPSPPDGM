@@ -34,9 +34,6 @@ export function GuruStaffTab({
       <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-slate-100">
           <div>
-            <span className="text-[10px] bg-sky-50 text-sky-800 font-bold px-2.5 py-1 rounded-md uppercase tracking-wider mb-1.5 inline-block border border-sky-100">
-              Modul 2C
-            </span>
             <h2 className="text-base font-black text-slate-900 tracking-tight leading-none">
               Daftar Roster Guru & Kakitangan Akademik
             </h2>
@@ -85,50 +82,77 @@ export function GuruStaffTab({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200 uppercase text-[10px] font-black text-slate-400 tracking-wider">
-                <th className="p-4">Nama Guru</th>
-                <th className="p-4">No. Kad Pengenalan</th>
-                <th className="p-4">Jawatan Teraju</th>
-                <th className="p-4">Subjek Kompetensi</th>
-                <th className="p-4 text-center">Status</th>
+              <tr className="bg-slate-50/80 border-b border-slate-200 uppercase text-[10px] font-black text-slate-500 tracking-widest">
+                <th className="p-4">NAMA GURU</th>
+                <th className="p-4">JAWATAN</th>
+                <th className="p-4">NO PERMIT</th>
+                <th className="p-4">SUBJEK DI AJAR</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredGuru.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-400 italic bg-white font-medium">
-                    Tiada rekod guru ditemui mengikut tapisan.
+                  <td colSpan={4} className="p-12 text-center bg-white">
+                    <div className="flex flex-col items-center justify-center space-y-3 max-w-sm mx-auto">
+                      <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-2">
+                        <GraduationCap className="w-6 h-6" />
+                      </div>
+                      <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Tiada Rekod Guru</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        Sama ada carian tidak menemui padanan, atau anda belum mendafarkan sebarang guru/kakitangan peringkat ini.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
-                filteredGuru.map((g) => {
+                filteredGuru.map((g, idx) => {
                   const initialName = g.nama ? g.nama.split(" ").filter(Boolean).slice(0, 2).map(n => n[0]).join("") : "G";
+                  const isEven = idx % 2 === 0;
+                  const rowBgClass = isEven ? "bg-white" : "bg-slate-50/30";
                   return (
-                    <tr key={g.id} className="hover:bg-slate-50/40 transition-colors">
-                      <td className="p-4 font-black text-slate-900">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-sky-50 text-[#006494] flex items-center justify-center font-extrabold text-xs uppercase border border-sky-150 shadow-xs">
-                            {initialName.substring(0, 2)}
+                    <React.Fragment key={g.id}>
+                      {/* Row 1 */}
+                      <tr className={`${rowBgClass} transition-colors`}>
+                        <td className="p-4 pb-1.5 font-black text-slate-900 border-t border-slate-100/60">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-sky-50 text-[#006494] flex items-center justify-center font-extrabold text-xs uppercase border border-sky-150 shadow-xs shrink-0">
+                              {initialName.substring(0, 2)}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-900">{g.nama}</span>
+                              <span className={`inline-flex items-center gap-1 w-max mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase border leading-none ${
+                                g.status === "Aktif"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                  : g.status === "Cuti"
+                                  ? "bg-amber-50 text-amber-700 border-amber-100"
+                                  : "bg-rose-50 text-rose-700 border-rose-105"
+                              }`}>
+                                <span className={`w-1 h-1 rounded-full ${g.status === "Aktif" ? "bg-emerald-500 animate-pulse" : g.status === "Cuti" ? "bg-amber-500" : "bg-rose-500"}`} />
+                                <span>{g.status}</span>
+                              </span>
+                            </div>
                           </div>
-                          <span className="font-bold text-slate-900">{g.nama}</span>
-                        </div>
-                      </td>
-                      <td className="p-4 font-extrabold text-slate-500 font-mono tracking-wider">{maskIC(g.icNumber)}</td>
-                      <td className="p-4 font-black text-slate-800 uppercase tracking-tight">{g.jawatan}</td>
-                      <td className="p-4 font-bold text-slate-600">{g.subjek || "Pembimbing Umum"}</td>
-                      <td className="p-4 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase border leading-none ${
-                          g.status === "Aktif"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                            : g.status === "Cuti"
-                            ? "bg-amber-50 text-amber-700 border-amber-100"
-                            : "bg-rose-50 text-rose-700 border-rose-105"
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${g.status === "Aktif" ? "bg-emerald-500 animate-pulse" : g.status === "Cuti" ? "bg-amber-500" : "bg-rose-500"}`} />
-                          <span>{g.status}</span>
-                        </span>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="p-4 pb-1.5 font-black text-slate-800 uppercase tracking-tight border-t border-slate-100/60">{g.jawatan}</td>
+                        <td className="p-4 pb-1.5 font-extrabold text-[#006494] font-mono tracking-wider border-t border-slate-100/60 uppercase">{g.noPermit || "TIADA REKOD PERMIT"}</td>
+                        <td className="p-4 pb-1.5 font-bold text-slate-700 border-t border-slate-100/60">{g.subjek || "Pembimbing Umum"}</td>
+                      </tr>
+                      {/* Row 2 */}
+                      <tr className={`${rowBgClass} transition-colors border-b border-slate-200/50`}>
+                        <td className="px-4 pb-4 pt-1 font-semibold text-slate-500 font-mono tracking-wider">
+                          {maskIC(g.icNumber)}
+                        </td>
+                        <td className="px-4 pb-4 pt-1 font-medium text-slate-500">
+                          {g.jantina || "Tidak Dinyatakan"}
+                        </td>
+                        <td className="px-4 pb-4 pt-1 font-medium text-slate-500 font-mono">
+                          {g.tarikhMulaPermit && g.tarikhTamatPermit ? `${g.tarikhMulaPermit} – ${g.tarikhTamatPermit}` : "TIADA TEMPOH AKTIF"}
+                        </td>
+                        <td className="px-4 pb-4 pt-1 font-medium text-slate-500 uppercase">
+                          {g.tahapPendidikanSemasa || "TIADA MAKLUMAT"}
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   );
                 })
               )}

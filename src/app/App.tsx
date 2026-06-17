@@ -130,7 +130,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#f7f6f2] flex flex-col items-center justify-center p-8 font-sans">
         <div className="w-full max-w-md text-center space-y-6">
-          <img src="/icon-512.png" alt="SPS" className="w-16 h-16 mx-auto animate-pulse rounded-xl" />
+          <img src="/icons/android-chrome-512x512.png" alt="SPS" referrerPolicy="no-referrer" className="w-16 h-16 mx-auto animate-pulse rounded-xl" />
           <div className="space-y-2">
             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Memulakan Sesi Keselamatan</h3>
             <p className="text-xs text-slate-500 font-medium leading-relaxed">Sila tunggu seketika sementara pangkalan data SPS menghubungkan kelayakan anda...</p>

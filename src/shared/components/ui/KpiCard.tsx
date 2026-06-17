@@ -24,7 +24,7 @@ export function KpiCard({ label, value, hint, tone = "default" }: KpiCardProps) 
           value: "text-emerald-900",
           hint: "text-emerald-700/90",
           iconBg: "bg-emerald-100 text-emerald-700",
-          borderAccent: "border-l-4 border-l-emerald-500",
+          borderAccent: "border-t-4 border-t-emerald-500",
           icon: CheckCircle
         };
       case "warning":
@@ -33,7 +33,7 @@ export function KpiCard({ label, value, hint, tone = "default" }: KpiCardProps) 
           value: "text-amber-900",
           hint: "text-amber-700/90",
           iconBg: "bg-amber-100 text-amber-700",
-          borderAccent: "border-l-4 border-l-amber-500",
+          borderAccent: "border-t-4 border-t-amber-500",
           icon: Calendar
         };
       case "danger":
@@ -42,7 +42,7 @@ export function KpiCard({ label, value, hint, tone = "default" }: KpiCardProps) 
           value: "text-rose-900",
           hint: "text-rose-700/90",
           iconBg: "bg-rose-100 text-rose-700",
-          borderAccent: "border-l-4 border-l-rose-500",
+          borderAccent: "border-t-4 border-t-rose-500",
           icon: ShieldAlert
         };
       case "info":
@@ -51,7 +51,7 @@ export function KpiCard({ label, value, hint, tone = "default" }: KpiCardProps) 
           value: "text-sky-900",
           hint: "text-sky-700/90",
           iconBg: "bg-sky-100 text-sky-700",
-          borderAccent: "border-l-4 border-l-sky-500",
+          borderAccent: "border-t-4 border-t-sky-500",
           icon: Info
         };
       case "default":
@@ -61,7 +61,7 @@ export function KpiCard({ label, value, hint, tone = "default" }: KpiCardProps) 
           value: "text-primary-800",
           hint: "text-slate-500",
           iconBg: "bg-primary-50 text-primary-600 border border-primary-100/40",
-          borderAccent: "border-l-4 border-l-primary-600",
+          borderAccent: "border-t-4 border-t-primary-600",
           icon: Building2
         };
     }
@@ -73,23 +73,22 @@ export function KpiCard({ label, value, hint, tone = "default" }: KpiCardProps) 
   return (
     <div
       id={`kpi-card-${label.toLowerCase().replace(/\s+/g, "-")}`}
-      className={`relative overflow-hidden rounded-xl border p-5 transition-all duration-300 hover:shadow-xs flex flex-col justify-between min-h-[136px] ${classes.card} ${classes.borderAccent}`}
+      className={`relative overflow-hidden rounded-xl border p-5 transition-all duration-300 hover:shadow-xs flex flex-col items-center justify-center text-center min-h-[150px] ${classes.card} ${classes.borderAccent}`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-xs font-black tracking-wider text-slate-500 uppercase">
+      {/* Centered visual icon */}
+      <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-3 shrink-0 ${classes.iconBg}`}>
+        <IconComponent className="w-5 h-5" />
+      </div>
+
+      <div className="space-y-1.5 w-full flex flex-col items-center justify-center">
+        <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase block text-center">
           {label}
         </span>
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${classes.iconBg}`}>
-          <IconComponent className="w-4 h-4" />
-        </div>
-      </div>
-      
-      <div className="space-y-1 mt-2">
-        <p className={`text-3xl md:text-4xl font-extrabold tracking-tight ${classes.value}`}>
+        <p className={`text-3xl md:text-4xl font-extrabold tracking-tight text-center ${classes.value}`}>
           {value}
         </p>
         {hint && (
-          <p className={`text-xs font-bold leading-normal truncate ${classes.hint}`}>
+          <p className={`text-[11px] font-bold leading-normal text-center truncate max-w-full ${classes.hint}`}>
             {hint}
           </p>
         )}

@@ -1,7 +1,21 @@
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, addDoc, serverTimestamp } from "firebase/firestore";
 import { db, handleFirestoreError, OperationType } from "../../../lib/firebase";
 import { PematuhanRecord, StatusDokumen } from "../../../types/pematuhan";
 import { InstitusiKategori } from "../../../types/institusi";
+
+export async function createPematuhanRecord(record: Omit<PematuhanRecord, "id"> & Record<string, any>): Promise<string> {
+  const path = "pematuhan";
+  try {
+    const docRef = await addDoc(collection(db, path), {
+      ...record,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return docRef.id;
+  } catch (err: any) {
+    handleFirestoreError(err, OperationType.CREATE, path);
+  }
+}
 
 export async function getPematuhanList(): Promise<PematuhanRecord[]> {
   const path = "pematuhan";

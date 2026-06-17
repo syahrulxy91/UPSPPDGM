@@ -13,6 +13,7 @@ const PematuhanPage = lazy(() => import("../features/pematuhan/pages/PematuhanPa
 const TindakanPage = lazy(() => import("../features/tindakan/pages/TindakanPage"));
 const BorangPage = lazy(() => import("../features/borang/pages/BorangPage"));
 const LaporanPage = lazy(() => import("../features/laporan/pages/LaporanPage"));
+const TetapanPage = lazy(() => import("../features/dashboard/pages/TetapanPage"));
 
 export const routes: RouteConfig[] = [
   {
@@ -50,6 +51,12 @@ export const routes: RouteConfig[] = [
     label: "Laporan & Analitik",
     description: "Statistik, KPI, dan graf pematuhan bersepadu",
     element: <LaporanPage />,
+  },
+  {
+    path: "/tetapan",
+    label: "Tetapan",
+    description: "Katalis integrasi dan konfigurasi sistem",
+    element: <TetapanPage />,
   },
 ];
 

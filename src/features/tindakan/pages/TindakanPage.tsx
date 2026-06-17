@@ -304,13 +304,6 @@ export function TindakanPage() {
             <Plus className="w-4 h-4 text-secondary-300 font-extrabold" />
             <span>Tambah Rekod Tindakan</span>
           </button>
-          <button
-            onClick={loadTindakan}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-full transition-all cursor-pointer shadow-sm"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-slate-400 font-bold" />
-            <span>Segarkan Data</span>
-          </button>
         </div>
       </div>
 

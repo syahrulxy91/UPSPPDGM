@@ -14,7 +14,11 @@
         "noTelefon": { "type": "string" },
         "pendaftar": { "type": "string" },
         "statusPendaftaran": { "type": "string" },
-        "updatedAt": { "type": "string" }
+        "updatedAt": { "type": "string" },
+        "pemilikPengurusan": {
+          "type": "object",
+          "description": "Maklumat Pemilik & Pengurusan Utama"
+        }
       },
       "required": ["id", "nama", "jenis", "statusPendaftaran"]
     },

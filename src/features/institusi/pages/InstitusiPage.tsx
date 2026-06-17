@@ -8,9 +8,13 @@ import { FilterBar, FilterField } from "../../../shared/components/ui/FilterBar"
 import { StatusBadge } from "../../../shared/components/ui/StatusBadge";
 import { LoadingSkeleton } from "../../../shared/components/ui/LoadingSkeleton";
 import { EmptyState } from "../../../shared/components/ui/EmptyState";
-import { Search, MapPin, Phone, User, Calendar, FileText, RefreshCw, Building, Plus, ShieldCheck, Info } from "lucide-react";
+import { Search, MapPin, Phone, User, Calendar, FileText, RefreshCw, Building, Plus, ShieldCheck, Info, Cloud, CloudOff } from "lucide-react";
 import { BorangPendaftaran } from "../components/BorangPendaftaran";
 import { InstitusiDetailModal } from "../components/InstitusiDetailModal";
+import { useRole } from "../../../shared/contexts/RoleContext";
+import { toast } from "react-hot-toast";
+import { collection, query, onSnapshot } from "firebase/firestore";
+import { db } from "../../../lib/firebase";
 
 export function InstitusiPage() {
   const [institusi, setInstitusi] = useState<InstitusiRecord[]>([]);
@@ -18,9 +22,15 @@ export function InstitusiPage() {
   const [error, setError] = useState<string | null>(null);
   const [isRegistering, setIsRegistering] = useState<boolean>(false);
 
+  // Sync state variables (compliance with UI UX Pro Max Methodology)
+  const [syncState, setSyncState] = useState<"synced" | "saving" | "error" >("synced");
+  const [syncError, setSyncError] = useState<string | null>(null);
+
   // Detail Modal States
   const [selectedDetailInst, setSelectedDetailInst] = useState<InstitusiRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
+
+  const { userEmail } = useRole();
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,24 +38,108 @@ export function InstitusiPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [zonFilter, setZonFilter] = useState("all");
 
+  // Fallback / Manual data trigger if requested
   async function loadInstitusi() {
     console.log("loadInstitusi refetch start");
     setLoading(true);
+    setSyncState("saving");
     setError(null);
     try {
       const data = await getInstitusiList();
       setInstitusi(data);
+      setSyncState("synced");
     } catch (err: any) {
       console.error(err);
       setError("Gagal mendapatkan senarai rekod institusi dari Firestore.");
+      setSyncState("error");
     } finally {
       setLoading(false);
       console.log("loadInstitusi refetch end");
     }
   }
 
+  // Real-time Firestore subscription (Single source of truth)
   useEffect(() => {
-    loadInstitusi();
+    setLoading(true);
+    setSyncState("saving");
+    setError(null);
+
+    const q = query(collection(db, "institusi"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          
+          const namaInstitusi = String(data.namaInstitusi ?? data.nama ?? "").trim();
+          const rawKategori = String(data.kategori ?? data.jenis ?? "tadika swasta").toLowerCase();
+          let kategori: InstitusiKategori = "tadika swasta";
+          if (rawKategori.includes("sekolah")) kategori = "sekolah swasta";
+          else if (rawKategori.includes("tuisyen")) kategori = "pusat tuisyen";
+          
+          const zon = String(data.zon ?? data.daerah ?? "");
+          const mukim = String(data.mukim ?? "");
+          
+          const rawStatus = String(data.statusOperasi ?? data.statusPendaftaran ?? "aktif").toLowerCase();
+          let statusOperasi: InstitusiStatus = "aktif";
+          if (rawStatus.includes("tidak") || rawStatus === "tamat tempoh") {
+            statusOperasi = "tidak aktif";
+          } else if (rawStatus.includes("gantung")) {
+            statusOperasi = "digantung";
+          }
+
+          const tarikhDaftar = String(data.tarikhDaftar ?? data.updatedAt ?? "");
+          const noRujukan = String(data.noRujukan ?? data.kod ?? "");
+          const alamat = String(data.alamat ?? "");
+          const pengelola = data.pengelola ?? data.pendaftar ? String(data.pengelola ?? data.pendaftar) : "";
+          const telefon = data.telefon ?? data.noTelefon ? String(data.telefon ?? data.noTelefon) : "";
+
+          return {
+            id: doc.id,
+            namaInstitusi,
+            kategori,
+            zon,
+            mukim,
+            statusOperasi,
+            tarikhDaftar,
+            noRujukan,
+            alamat,
+            pengelola,
+            telefon,
+            yuran_semasa: data.yuran_semasa ? Number(data.yuran_semasa) : undefined,
+            yuranSemasa: data.yuranSemasa ? Number(data.yuranSemasa) : undefined,
+            nama_gb: data.nama_gb ? String(data.nama_gb) : undefined,
+            namaGB: data.namaGB ? String(data.namaGB) : undefined,
+            nama_pengetua: data.nama_pengetua ? String(data.nama_pengetua) : undefined,
+            namaPengetua: data.namaPengetua ? String(data.namaPengetua) : undefined,
+            alamat_premis: data.alamat_premis ? String(data.alamat_premis) : undefined,
+            bil_murid: data.bil_murid ? Number(data.bil_murid) : undefined,
+            bilGuru: data.bilGuru ? Number(data.bilGuru) : undefined,
+            bil_guru: data.bil_guru ? Number(data.bil_guru) : undefined,
+            tahun_dikemaskini: data.tahun_dikemaskini ? String(data.tahun_dikemaskini) : undefined,
+            portalAccess: data.portalAccess || undefined,
+            statusProfil: data.statusProfil || "belum-mula",
+            statusPendaftaran: data.statusPendaftaran || "didaftarkan-awal",
+            completionPercentage: typeof data.completionPercentage === 'number' ? data.completionPercentage : 0,
+            source: data.source || "pendaftaran-baru"
+          };
+        });
+
+        const sorted = list.sort((a, b) => a.namaInstitusi.localeCompare(b.namaInstitusi));
+        setInstitusi(sorted);
+        setLoading(false);
+        setSyncState("synced");
+      },
+      (err) => {
+        console.error("onSnapshot error in InstitusiPage:", err);
+        setError("Gagal menyambung langganan Firestore secara langsung mendesak refresh.");
+        setSyncState("error");
+        setSyncError(err.message);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   // Filter local using useMemo
@@ -170,6 +264,9 @@ export function InstitusiPage() {
     }
   };
 
+  // Class merging helper
+  const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(" ");
+
   // Humanize categories
   const formatKategori = (kat: InstitusiKategori) => {
     switch (kat) {
@@ -208,26 +305,30 @@ export function InstitusiPage() {
 
   return (
     <div className="space-y-6" id="institusi-page-container">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <PageHeader
-          title="Senarai Institusi Pendidikan Swasta"
-          subtitle="Menguruskan pendaftaran, permit, dan zon operasi Institusi Pendidikan Swasta berdaftar di Gua Musang."
-        />
-        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+      {/* Page Header: Premium Enterprise Dark Hero Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-950 rounded-2xl p-6 md:p-8 shadow-lg text-white border border-slate-800 text-left relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6" id="hero-banner-institusi">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#01696f]/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
+        <div className="absolute bottom-0 left-10 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+        
+        <div className="relative z-10 space-y-2">
+          <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-widest block font-sans">
+            SPS PPD GUA MUSANG • PORTAL UTAMA SWASTA
+          </span>
+          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none">
+            Paparan Institusi Pendidikan Swasta (IPS)
+          </h1>
+          <p className="text-slate-300 text-xs md:text-sm font-medium max-w-2xl leading-relaxed">
+            Sistem berpusat pegawai pengesah PPD Gua Musang bagi mengurus kelayakan kelulusan am premis, pendaftaran permit guru, dan audit pematuhan fizikal KPM.
+          </p>
+        </div>
+
+        <div className="relative z-10 shrink-0 self-start md:self-auto">
           <button
             onClick={() => setIsRegistering(true)}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold bg-primary-800 hover:bg-primary-900 text-white rounded-full transition-all cursor-pointer shadow-xs border border-primary-950/20"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 text-xs md:text-sm font-black bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition-all cursor-pointer shadow-[0_4px_12px_rgba(16,185,129,0.35)] active:scale-98 uppercase tracking-wider border border-emerald-600/35"
           >
-            <Plus className="w-4 h-4 text-secondary-300 font-extrabold" />
+            <Plus className="w-4 h-4 text-white font-black shrink-0" />
             <span>Daftar IPS Baru</span>
-          </button>
-          <button
-            onClick={loadInstitusi}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-full transition-all cursor-pointer shadow-sm"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-slate-400 font-bold" />
-            <span>Segarkan Data</span>
           </button>
         </div>
       </div>
@@ -285,78 +386,101 @@ export function InstitusiPage() {
             />
           </div>
 
-          {/* Migration status report banner */}
-          <div className="bg-slate-100/80 border border-slate-200/60 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left" id="migration-status-report">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 bg-primary-100 rounded-xl text-primary-800 shrink-0">
-                <ShieldCheck className="w-5 h-5 text-primary-800" />
-              </div>
-              <div className="space-y-0.5 text-left">
-                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wide">
-                  Laporan Integrasi & Migrasi Firebase Auth
-                </h4>
-                <p className="text-xs text-slate-500 font-semibold max-w-xl">
-                  Memantau transisi keselamatan dari kredensial hash yang lama kepada sistem kawalan pengesahan Firebase Authentication yang tulen.
-                </p>
-              </div>
-            </div>
-
-            {/* Stats badges side-by-side */}
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <div className="bg-white border border-slate-250/50 px-3 py-1.5 rounded-lg text-center shadow-3xs">
-                <span className="text-[10px] text-slate-500 font-extrabold block uppercase tracking-wider">Legacy</span>
-                <span className="text-xs font-black text-slate-700">{migrationStats.legacyCount}</span>
-              </div>
-              <div className="bg-amber-50 border border-amber-200/50 px-3 py-1.5 rounded-lg text-center shadow-3xs">
-                <span className="text-[10px] text-amber-600 font-extrabold block uppercase tracking-wider">Hybrid</span>
-                <span className="text-xs font-black text-amber-700">{migrationStats.hybridCount}</span>
-              </div>
-              <div className="bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-center shadow-3xs">
-                <span className="text-[10px] text-emerald-600 font-extrabold block uppercase tracking-wider">Secure Auth</span>
-                <span className="text-xs font-black text-emerald-700">{migrationStats.firebaseAuthOnlyCount}</span>
-              </div>
-            </div>
-          </div>
-
           {/* Unified Carian & Filter Section */}
-          <div className="space-y-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm" id="filter-wrapper">
-            <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-end w-full">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-3xs" id="filter-wrapper">
+            <div className="flex flex-col lg:flex-row lg:items-end gap-3.5 w-full">
               {/* Search Box */}
-              <div className="flex-1 space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block pl-0.5">
+              <div className="flex-1 space-y-1.5 min-w-[280px]">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block pl-0.5 text-left">
                   Carian Institusi
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Masukkan nama institusi, no. rujukan pengelola, alamat..."
+                    placeholder="Masukkan nama institusi, no. rujukan, alamat..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg pl-10 pr-4 py-2.5 font-semibold transition-all focus:border-primary-500 focus:bg-white focus:outline-hidden placeholder-slate-400"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl pl-10 pr-4 py-3 font-semibold transition-all focus:border-[#01696f] focus:bg-white focus:outline-hidden placeholder-slate-400"
                   />
                 </div>
               </div>
 
-              {/* Reset trigger */}
-              {(searchQuery || kategoriFilter !== "all" || statusFilter !== "all" || zonFilter !== "all") && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setKategoriFilter("all");
-                    setStatusFilter("all");
-                    setZonFilter("all");
-                  }}
-                  className="px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-100 transition-colors cursor-pointer self-start md:self-auto shrink-0 mb-0.5"
-                >
-                  Set Semula Tapisan
-                </button>
-              )}
-            </div>
+              {/* Filters inline row for categories, status of operations, and zone */}
+              <div className="flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-stretch sm:items-end gap-3 lg:w-auto w-full">
+                
+                {/* 1. Kategori */}
+                <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1 text-left">
+                    Kategori
+                  </label>
+                  <select
+                    id="filter-select-kategori"
+                    value={kategoriFilter}
+                    onChange={(e) => setKategoriFilter(e.target.value)}
+                    className="bg-slate-50 hover:bg-white border border-slate-200 hover:border-slate-300 text-slate-900 text-sm rounded-xl px-3.5 py-3 font-semibold transition-all duration-200 focus:border-[#01696f] focus:bg-white focus:outline-hidden cursor-pointer"
+                  >
+                    <option value="all">Semua Kategori</option>
+                    <option value="tadika swasta">Tadika Swasta</option>
+                    <option value="sekolah swasta">Sekolah Swasta</option>
+                    <option value="pusat tuisyen">Pusat Tuisyen</option>
+                  </select>
+                </div>
 
-            {/* FilterBar selection drawer */}
-            <FilterBar fields={filterFields} onChange={handleFilterChange} />
+                {/* 2. Status Operasi */}
+                <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1 text-left">
+                    Status Operasi
+                  </label>
+                  <select
+                    id="filter-select-status"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="bg-slate-50 hover:bg-white border border-slate-200 hover:border-slate-300 text-slate-900 text-sm rounded-xl px-3.5 py-3 font-semibold transition-all duration-200 focus:border-[#01696f] focus:bg-white focus:outline-hidden cursor-pointer"
+                  >
+                    <option value="all">Semua Status</option>
+                    <option value="aktif">Aktif</option>
+                    <option value="tidak aktif">Tidak Aktif</option>
+                    <option value="digantung">Digantung</option>
+                  </select>
+                </div>
+
+                {/* 3. Zon */}
+                <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1 text-left">
+                    Zon
+                  </label>
+                  <select
+                    id="filter-select-zon"
+                    value={zonFilter}
+                    onChange={(e) => setZonFilter(e.target.value)}
+                    className="bg-slate-50 hover:bg-white border border-slate-200 hover:border-slate-300 text-slate-900 text-sm rounded-xl px-3.5 py-3 font-semibold transition-all duration-200 focus:border-[#01696f] focus:bg-white focus:outline-hidden cursor-pointer"
+                  >
+                    <option value="all">Semua Zon</option>
+                    <option value="bandar">Bandar Gua Musang</option>
+                    <option value="paloh">Zon Paloh</option>
+                    <option value="lojing">Zon Lojing</option>
+                  </select>
+                </div>
+
+                {/* Reset button inside the same inline layout */}
+                {(searchQuery || kategoriFilter !== "all" || statusFilter !== "all" || zonFilter !== "all") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setKategoriFilter("all");
+                      setStatusFilter("all");
+                      setZonFilter("all");
+                    }}
+                    className="px-4 py-3 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 hover:border-rose-300 transition-colors cursor-pointer shrink-0 self-stretch sm:self-end"
+                  >
+                    Set Semula Tapisan
+                  </button>
+                )}
+
+              </div>
+            </div>
           </div>
 
           {/* Zero results block */}
@@ -373,7 +497,6 @@ export function InstitusiPage() {
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200 text-xs font-extrabold text-slate-500 uppercase tracking-wider">
                       <th className="py-3.5 px-4">Nama Institusi</th>
-                      <th className="py-3.5 px-4">Kategori</th>
                       <th className="py-3.5 px-4">Zon / No. Rujukan</th>
                       <th className="py-3.5 px-4 text-center">Status</th>
                       <th className="py-3.5 px-4">Mukim / Alamat</th>
@@ -384,21 +507,30 @@ export function InstitusiPage() {
                   <tbody className="divide-y divide-slate-100 text-sm text-slate-600">
                     {filteredInstitusi.map((item) => (
                       <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <button
-                            onClick={() => {
-                              setSelectedDetailInst(item);
-                              setIsDetailOpen(true);
-                            }}
-                            className="font-extrabold text-slate-900 text-sm md:text-base hover:text-primary-800 hover:underline transition-all cursor-pointer text-left focus:outline-hidden"
-                          >
-                            {item.namaInstitusi}
-                          </button>
-                        </td>
-                        <td className="py-3.5 px-4 capitalize">
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 rounded-md text-xs font-semibold text-slate-700 uppercase">
-                            {formatKategori(item.kategori)}
-                          </span>
+                        <td className="py-3.5 px-4 align-top">
+                          <div className="flex flex-col gap-1 text-left">
+                            <button
+                              onClick={() => {
+                                setSelectedDetailInst(item);
+                                setIsDetailOpen(true);
+                              }}
+                              className="font-bold text-slate-900 text-sm hover:text-[#01696f] hover:underline transition-all cursor-pointer text-left focus:outline-hidden block leading-tight"
+                            >
+                              {item.namaInstitusi}
+                            </button>
+                            <span
+                              className={cn(
+                                "inline-flex w-fit items-center px-2 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase border",
+                                item.kategori.toLowerCase() === "tadika swasta"
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                  : item.kategori.toLowerCase() === "sekolah swasta"
+                                  ? "bg-sky-50 text-sky-800 border-sky-200"
+                                  : "bg-slate-50 text-slate-700 border-slate-200"
+                              )}
+                            >
+                              {formatKategori(item.kategori)}
+                            </span>
+                          </div>
                         </td>
                         <td className="py-3.5 px-4">
                           <div className="space-y-0.5">
@@ -449,6 +581,7 @@ export function InstitusiPage() {
                               <ShieldCheck className="w-3.5 h-3.5 text-secondary-600" />
                               <span>Pematuhan</span>
                             </Link>
+                            {/* Hard-delete and danger zone removed completely */}
                           </div>
                         </td>
                       </tr>
@@ -532,24 +665,26 @@ export function InstitusiPage() {
                     )}
 
                     {/* Urus Pematuhan button for mobile */}
-                    <div className="pt-1 grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedDetailInst(item);
-                          setIsDetailOpen(true);
-                        }}
-                        className="inline-flex items-center justify-center gap-1.5 py-2.5 text-xs font-black text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 shadow-2xs transition-all cursor-pointer uppercase font-sans"
-                      >
-                        <Info className="w-3.5 h-3.5 text-slate-500 font-bold" />
-                        <span>Profil IPS</span>
-                      </button>
-                      <Link
-                        to={`/pematuhan?instId=${item.id}`}
-                        className="inline-flex items-center justify-center gap-1.5 py-2.5 text-xs font-black text-primary-800 bg-primary-50 hover:bg-primary-100 rounded-xl border border-primary-200 shadow-2xs transition-all cursor-pointer uppercase font-sans"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5 text-secondary-600 font-extrabold" />
-                        <span>Pematuhan</span>
-                      </Link>
+                    <div className="pt-1 select-none">
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedDetailInst(item);
+                            setIsDetailOpen(true);
+                          }}
+                          className="inline-flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-black text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 shadow-2xs transition-all cursor-pointer uppercase font-sans"
+                        >
+                          <Info className="w-3.5 h-3.5 text-slate-500 font-bold" />
+                          <span>Profil IPS</span>
+                        </button>
+                        <Link
+                          to={`/pematuhan?instId=${item.id}`}
+                          className="inline-flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-black text-primary-800 bg-primary-50 hover:bg-primary-100 rounded-xl border border-primary-200 shadow-2xs transition-all cursor-pointer uppercase font-sans"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 text-secondary-600 font-extrabold" />
+                          <span>Pematuhan</span>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -567,6 +702,8 @@ export function InstitusiPage() {
             institusi={selectedDetailInst}
             onUpdate={loadInstitusi}
           />
+
+          {/* Delete Confirmation Modal completely removed to respect Danger Zone policy */}
         </>
       )}
     </div>

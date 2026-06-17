@@ -36,30 +36,36 @@ export function KelasMuridTab({
     >
       {/* 1. Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4" id="stat-murid-total-container">
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center justify-between" id="stat-murid-total">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center space-y-3" id="stat-murid-total">
+          <div className="w-10 h-10 bg-sky-50 text-[#006494] rounded-full flex items-center justify-center border border-sky-100 shadow-sm">
+            <Users className="w-5 h-5" />
+          </div>
           <div className="space-y-1">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Jumlah Murid Terdaftar</span>
-            <span className="text-2xl font-black text-slate-900 tracking-tight">{statsMurid.jumlah} <span className="text-xs font-bold text-slate-400">Orang</span></span>
-          </div>
-          <div className="w-12 h-12 bg-sky-50 text-[#006494] rounded-xl flex items-center justify-center border border-sky-100 shadow-sm float-right">
-            <Users className="w-6 h-6" />
+            <span className="text-2xl font-black text-slate-900 tracking-tight block">
+              {statsMurid.jumlah} <span className="text-xs font-bold text-slate-400">Orang</span>
+            </span>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center justify-between" id="stat-murid-lelaki">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center space-y-3" id="stat-murid-lelaki">
+          <div className="w-10 h-10 bg-blue-50 text-blue-700 rounded-full flex items-center justify-center text-xs font-black border border-blue-100 shadow-xs">L</div>
           <div className="space-y-1">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Murid Lelaki</span>
-            <span className="text-2xl font-black text-[#006494] tracking-tight">{statsMurid.lelaki} <span className="text-xs font-bold text-slate-400">Orang</span></span>
+            <span className="text-2xl font-black text-[#006494] tracking-tight block">
+              {statsMurid.lelaki} <span className="text-xs font-bold text-slate-400">Orang</span>
+            </span>
           </div>
-          <div className="w-10 h-10 bg-blue-50 text-blue-700 rounded-xl flex items-center justify-center text-xs font-black border border-blue-100 shadow-xs">L</div>
         </div>
 
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center justify-between" id="stat-murid-perempuan">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center space-y-3" id="stat-murid-perempuan">
+          <div className="w-10 h-10 bg-pink-50 text-pink-700 rounded-full flex items-center justify-center text-xs font-black border border-pink-100 shadow-xs">P</div>
           <div className="space-y-1">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Murid Perempuan</span>
-            <span className="text-2xl font-black text-pink-600 tracking-tight">{statsMurid.perempuan} <span className="text-xs font-bold text-slate-400">Orang</span></span>
+            <span className="text-2xl font-black text-pink-600 tracking-tight block">
+              {statsMurid.perempuan} <span className="text-xs font-bold text-slate-400">Orang</span>
+            </span>
           </div>
-          <div className="w-10 h-10 bg-pink-50 text-pink-700 rounded-xl flex items-center justify-center text-xs font-black border border-pink-100 shadow-xs">P</div>
         </div>
       </div>
 
@@ -85,8 +91,21 @@ export function KelasMuridTab({
 
           <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
             {kelasList.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 italic text-xs">
-                Tiada kelas berdaftar.
+              <div className="text-center py-10 px-4 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl space-y-3">
+                <div className="w-10 h-10 bg-sky-50 text-[#006494] rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Users className="w-5 h-5" />
+                </div>
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">Tiada Kelas Berdaftar</h4>
+                <p className="text-[11px] text-slate-500 leading-relaxed max-w-[200px] mx-auto">
+                  Sila daftar kelas akademik baru sebelum memulakan kemasukan murid.
+                </p>
+                <button
+                  onClick={onAddKelasClick}
+                  className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:border-[#006494] text-[#006494] text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Daftar Kelas Pertama</span>
+                </button>
               </div>
             ) : (
               kelasList.map((k) => {
@@ -199,8 +218,23 @@ export function KelasMuridTab({
               <tbody className="divide-y divide-slate-100">
                 {filteredMurid.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-slate-400 italic font-medium bg-white">
-                      Tiada pendaftaran rekod murid dijumpai mengikut carian.
+                    <td colSpan={4} className="p-12 text-center bg-white">
+                      <div className="flex flex-col items-center justify-center space-y-3 max-w-sm mx-auto">
+                        <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-2">
+                          <Search className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Tiada Rekod Murid</h4>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Sama ada carian tidak menemui padanan, atau anda belum memulakan pendaftaran murid.
+                        </p>
+                        <button
+                          onClick={onAddMuridClick}
+                          className="mt-4 bg-[#006494] hover:bg-[#004f76] text-white text-xs font-bold py-2.5 px-5 rounded-xl inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-xs uppercase tracking-wider"
+                        >
+                          <UserPlus className="w-4 h-4" />
+                          <span>Daftar Murid Sekarang</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ) : (

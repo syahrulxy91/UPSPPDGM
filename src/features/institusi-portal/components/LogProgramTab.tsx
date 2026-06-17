@@ -40,33 +40,39 @@ export function LogProgramTab({
     >
       {/* 1. Program statistics widgets */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4" id="program-statistics">
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center justify-between">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center space-y-3">
+          <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center border border-indigo-100 shadow-xs">
+            <Activity className="w-5 h-5" />
+          </div>
           <div className="space-y-1">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Jumlah Program</span>
-            <span className="text-2xl font-black text-slate-900 tracking-tight">{totalCount} <span className="text-xs font-bold text-slate-400">Penyertaan</span></span>
-          </div>
-          <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100 shadow-xs">
-            <Activity className="w-6 h-6" />
+            <span className="text-2xl font-black text-slate-900 tracking-tight block">
+              {totalCount} <span className="text-xs font-bold text-slate-400">Penyertaan</span>
+            </span>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center justify-between">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center space-y-3">
+          <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center border border-emerald-100 shadow-xs">
+            <CheckCircle className="w-5 h-5" />
+          </div>
           <div className="space-y-1">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Program Selesai</span>
-            <span className="text-2xl font-black text-emerald-600 tracking-tight">{completedCount} <span className="text-xs font-bold text-slate-400">Selesai</span></span>
-          </div>
-          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100 shadow-xs">
-            <CheckCircle className="w-6 h-6" />
+            <span className="text-2xl font-black text-emerald-600 tracking-tight block">
+              {completedCount} <span className="text-xs font-bold text-slate-400">Selesai</span>
+            </span>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center justify-between">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col items-center justify-center text-center space-y-3">
+          <div className="w-10 h-10 bg-sky-50 text-[#006494] rounded-full flex items-center justify-center border border-sky-100 shadow-xs">
+            <Clock className="w-5 h-5" />
+          </div>
           <div className="space-y-1">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Akan Datang / Dirancang</span>
-            <span className="text-2xl font-black text-blue-600 tracking-tight">{plannedCount} <span className="text-xs font-bold text-slate-400">Rancangan</span></span>
-          </div>
-          <div className="w-12 h-12 bg-sky-50 text-[#006494] rounded-xl flex items-center justify-center border border-sky-100 shadow-xs">
-            <Clock className="w-6 h-6" />
+            <span className="text-2xl font-black text-blue-600 tracking-tight block">
+              {plannedCount} <span className="text-xs font-bold text-slate-400">Rancangan</span>
+            </span>
           </div>
         </div>
       </div>
@@ -75,9 +81,6 @@ export function LogProgramTab({
       <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-slate-100">
           <div>
-            <span className="text-[10px] bg-sky-50 text-sky-800 font-bold px-2.5 py-1 rounded-md uppercase tracking-wider mb-1.5 inline-block border border-sky-100">
-              Modul 2D
-            </span>
             <h2 className="text-base font-black text-slate-900 tracking-tight leading-none">
               Aktiviti, Bengkel & Laporan Luaran Institusi
             </h2>
@@ -144,8 +147,23 @@ export function LogProgramTab({
       {/* 3. Cards display group */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="list-program">
         {filteredProgram.length === 0 ? (
-          <div className="col-span-full bg-white border border-slate-200/80 rounded-2xl p-8 text-center text-slate-400 italic">
-            Tiada rekod program dikesan mengikut tapis pilihan anda.
+          <div className="col-span-full bg-white border border-dashed border-slate-200 rounded-2xl p-16 flex items-center justify-center text-center">
+            <div className="flex flex-col items-center justify-center space-y-3 max-w-sm">
+              <div className="w-14 h-14 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-2">
+                <Calendar className="w-7 h-7" />
+              </div>
+              <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">Tiada Aktiviti Direkodkan</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Anda belum menambah sebarang log program, atau tiada padanan dengan tapisan bulan dan status semasa.
+              </p>
+              <button
+                onClick={onAddProgramClick}
+                className="mt-4 bg-[#006494] hover:bg-[#004f76] text-white text-xs font-bold py-2.5 px-5 rounded-xl inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-xs uppercase tracking-wider"
+              >
+                <CalendarCheck className="w-4 h-4" />
+                <span>Cipta Log Pertama</span>
+              </button>
+            </div>
           </div>
         ) : (
           filteredProgram.map((p) => {

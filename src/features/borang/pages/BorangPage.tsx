@@ -486,13 +486,6 @@ export default function BorangPage() {
             <Plus className="w-4 h-4 text-secondary-300 font-extrabold" />
             <span>Mula Borang Baharu</span>
           </button>
-          <button
-            onClick={loadData}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-full transition-all cursor-pointer shadow-sm"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-slate-400 font-bold animate-spin-hover" />
-            <span>Segarkan</span>
-          </button>
         </div>
       </div>
 

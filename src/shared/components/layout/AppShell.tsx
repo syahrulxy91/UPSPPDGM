@@ -11,7 +11,8 @@ import {
   FileText,
   TrendingUp,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Settings
 } from "lucide-react";
 import { UatAdminPanel } from "../ui/UatAdminPanel";
 import { useRole } from "../../contexts/RoleContext";
@@ -86,6 +87,9 @@ export function AppShell({
     { to: "/tindakan", id: "tindakan", label: "Tindakan Susulan", icon: ShieldAlert },
     { to: "/borang", id: "borang", label: "Urus Borang", icon: FileText },
     { to: "/laporan", id: "laporan", label: "Laporan & Analitik", icon: TrendingUp },
+    ...((role === "superadmin" || role === "pegawai_ppd") ? [
+      { to: "/tetapan", id: "tetapan", label: "Tetapan", icon: Settings }
+    ] : []),
   ];
 
   return (
@@ -98,11 +102,14 @@ export function AppShell({
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 md:px-8 py-3.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4 shrink-0">
           
-          {/* Official styled Shield / Badge Emblem with Royal Gold/Teal theme */}
-          <div className="w-[42px] h-[42px] bg-gradient-to-br from-[#051719] to-[#01696f] text-white rounded-xl flex items-center justify-center font-black text-xs tracking-wider shadow-md shadow-[#01696f]/10 border border-[#01696f]/30 relative overflow-hidden" id="us-app-logo">
-            SPS
-            <div className="absolute top-0 right-0 w-3 h-3 bg-[#e4a834] rounded-bl-full border-l border-b border-[#051719]" />
-          </div>
+          {/* Official styled Shield / Badge Emblem from public/icons folder */}
+          <img 
+            src="/icons/apple-touch-icon.png" 
+            alt="SPS" 
+            className="w-10 h-10 object-contain rounded-xl shadow-md border border-slate-200/80 shrink-0 hover:scale-105 transition-all" 
+            id="us-app-logo" 
+            referrerPolicy="no-referrer"
+          />
 
           <div className="flex flex-col">
             <span className="text-[10px] text-slate-450 font-black tracking-widest uppercase leading-none mb-1">
@@ -198,7 +205,7 @@ export function AppShell({
       {/* Main Body Layout with responsive structure and centered limit width */}
       <div className="flex flex-1 relative" id="main-content-layout">
         {/* Sidebar Left Space is left out to focus on the luxury Horizontal Top Navigation */}
-        <main className="flex-1 w-full max-w-7xl mx-auto p-3 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 w-full max-w-[1600px] mx-auto p-3 sm:p-5 lg:p-6 overflow-y-auto">
           {children}
         </main>
       </div>

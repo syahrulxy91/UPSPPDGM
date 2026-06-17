@@ -17,6 +17,8 @@ import { toast } from "react-hot-toast";
 import { FieldError } from "../../../shared/components/ui/FieldError";
 import { createInstitusiRecord } from "../services/institusiService";
 import { useRole } from "../../../shared/contexts/RoleContext";
+import { PemilikPengurusan } from "../../../types/institusi";
+import { PemilikPengurusanSection } from "./PemilikPengurusanSection";
 
 interface BorangPendaftaranProps {
   onBack: () => void;
@@ -41,44 +43,94 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
   });
 }
 
+const initialPemilikPengurusan: PemilikPengurusan = {
+  namaPemilik: "",
+  noIC: "",
+  jantina: "",
+  tarikhLahir: "",
+  negara: "",
+  statusPemilik: "",
+  alamatPenuh: "",
+  poskod: "",
+  bandar: "",
+  negeri: "",
+  noTelefon: "",
+  noTelefonRumah: "",
+  emel: "",
+  namaSyarikat: "",
+  noPendaftaranSyarikat: "",
+  bentukSyarikat: "",
+  tarikhPendaftaranSyarikat: "",
+  statusSyarikat: "",
+  alamatSyarikat: "",
+  namaPengarah: "",
+  noICPengarah: "",
+  jawatanPengurusan: "",
+  noTelefonPengurusan: "",
+  emelPengurusan: "",
+  tarikhMulaMengurus: "",
+  namaPenyelaras: "",
+  noICPenyelaras: "",
+  noTelefonPenyelaras: "",
+  emelPenyelaras: "",
+  jawatanPenyelaras: "",
+};
+
 export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
   const { userEmail, role } = useRole();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Form states
+  // Form states - Maklumat Am
   const [namaInstitusi, setNamaInstitusi] = useState("");
+  const [kodInstitusi, setKodInstitusi] = useState("");
+  
+  // Outer am errors
+  const [amErrors, setAmErrors] = useState<Record<string, string>>({});
 
-  // Inline errors state
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Suntik Data Demo trigger
+  const suntikDataDemo = () => {
+    setNamaInstitusi("Tadika Islam Bestari Gua Musang");
+    setKodInstitusi("KPM-SW-001");
+    // Clear existing validation messages
+    setAmErrors({});
+    toast.success("Data demo 'UI UX Pro Max' berjaya disuntik!");
+  };
 
   const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
+    const newAmErrors: Record<string, string> = {};
+
+    // Bahagian Am
     if (!namaInstitusi || namaInstitusi.trim().length < 5) {
-      newErrors.namaInstitusi = "Nama institusi wajib diisi (minimum 5 aksara)";
+      newAmErrors.namaInstitusi = "Nama institusi wajib diisi (minimum 5 aksara)";
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!kodInstitusi || kodInstitusi.trim().length < 3) {
+      newAmErrors.kodInstitusi = "Kod institusi wajib diisi (minimum 3 aksara)";
+    }
+
+    setAmErrors(newAmErrors);
+    return Object.keys(newAmErrors).length === 0;
   };
 
   const resetForm = () => {
     setNamaInstitusi("");
-    setErrors({});
+    setKodInstitusi("");
+    setAmErrors({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
-      toast.error("Sila perbetulkan ralat dalam borang!");
+      toast.error("Sila perbetulkan ralat dalam borang sebelum meneruskan!");
       return;
     }
 
-    console.log("submit started");
+    console.log("submit started with basic registration");
     setLoading(true);
     try {
-      const generatedNoRujukan = `KPM/SPS/GM-${Math.floor(1000 + Math.random() * 9000)}`;
+      const actualNoRujukan = kodInstitusi.trim();
       
-      // Call creation service and wrap in withTimeout
+      // Call creation service with null pemilikPengurusan metadata as requested
       const creationPromise = createInstitusiRecord({
         namaInstitusi,
         kategori: "tadika swasta", // always default to tadika swasta for base record
@@ -88,14 +140,14 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
         telefon: "",
         poskod: "",
         emel: "",
-        // Default seed setup
         statusOperasi: "aktif",
         statusPendaftaran: "didaftarkan-awal",
         source: "ppdgm-name-only-registration",
         statusProfil: "belum-mula", // 'belum-mula', 'sedang-dikemaskini', 'lengkap'
         completionPercentage: 0,
-        noRujukan: generatedNoRujukan,
+        noRujukan: actualNoRujukan,
         tarikhDaftar: new Date().toISOString().split("T")[0],
+        pemilikPengurusan: null
       }, { email: userEmail, role });
 
       const response = await withTimeout(
@@ -105,7 +157,7 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
       );
       
       setSuccess(true);
-      toast.success(`Institusi "${response.namaInstitusi}" (ID: ${response.id}) berjaya didaftarkan!`);
+      toast.success(`Institusi "${response.namaInstitusi}" (ID: ${response.id}) berjaya didaftarkan asas sahaja!`);
     } catch (err: any) {
       console.log("createInstitusiRecord fail");
       console.error(err);
@@ -129,14 +181,14 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
       if (isBlocked) {
         toast.error(
           "Pendaftaran tidak dapat dihantar kerana sambungan ke pangkalan data disekat atau terganggu. Sila semak sambungan internet, cuba semula, atau matikan extension pelayar yang menyekat request.",
-          { duration: 15000 }
+          { duration: 15005 }
         );
       } else {
         toast.error(`Pendaftaran gagal disimpan ke pangkalan data. ${errMsg || "Sila cuba semula."}`);
       }
     } finally {
       setLoading(false);
-      console.log("submit finally reset");
+      console.log("submit completed");
     }
   };
 
@@ -151,10 +203,10 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
             PENDAFTARAN ASAS BERJAYA
           </span>
           <h2 className="text-xl md:text-2xl font-black text-slate-900 leading-tight">
-            Institusi Didafarkan ke Senarai Awal
+            Institusi Didaftarkan ke Senarai Awal
           </h2>
           <p className="text-xs md:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            Rekod asas bagi <strong className="text-slate-800">{namaInstitusi || "Institusi IPS"}</strong> telah didaftarkan dengan jayanya. Pihak institusi kini boleh log masuk ke portal mereka untuk melengkapkan maklumat profil Bahagian A–H.
+            Satu rekod awal (shell) bagi <strong className="text-slate-800">{namaInstitusi || "Institusi IPS"}</strong> telah berjaya diwujudkan. Pihak pengusaha institusi kini boleh log masuk ke portal mereka untuk mengemaskini maklumat Pemilik & Pengurusan (Domain 01) secara terus.
           </p>
         </div>
 
@@ -162,6 +214,14 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
           <div className="flex justify-between border-b border-dashed border-slate-200 pb-2">
             <span className="text-slate-400">ID Sesi Permohonan:</span>
             <span className="text-slate-800 font-bold">IPS-{Math.floor(100000 + Math.random() * 900000)}</span>
+          </div>
+          <div className="flex justify-between border-b border-dashed border-slate-200 pb-2">
+            <span className="text-slate-400">Nama Institusi:</span>
+            <span className="text-slate-800 font-bold">{namaInstitusi}</span>
+          </div>
+          <div className="flex justify-between border-b border-dashed border-slate-200 pb-2">
+            <span className="text-slate-400">Kod Rujukan (Username):</span>
+            <span className="text-slate-800 font-bold">{kodInstitusi}</span>
           </div>
           <div className="flex justify-between border-b border-dashed border-slate-200 pb-2">
             <span className="text-slate-400">Masa Penghantaran:</span>
@@ -175,7 +235,7 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
               resetForm();
               onBack();
             }}
-            className="px-6 py-2.5 text-sm font-black bg-primary-800 hover:bg-primary-900 text-white rounded-full transition-all duration-200 cursor-pointer shadow-xs border border-primary-900 uppercase tracking-wider"
+            className="px-6 py-2.5 text-sm font-black bg-[#006494] hover:bg-[#004f76] text-white rounded-full transition-all duration-200 cursor-pointer shadow-xs border border-sky-900 uppercase tracking-wider"
           >
             Kembali ke Senarai IPS
           </button>
@@ -207,7 +267,7 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
           <ArrowLeft className="w-3.5 h-3.5 text-slate-400 font-bold" />
           <span>Kembali ke Senarai</span>
         </button>
-        <span className="text-xs text-secondary-600 font-extrabold tracking-widest uppercase">
+        <span className="text-xs text-[#006494] font-extrabold tracking-widest uppercase">
           KEMENTERIAN PENDIDIKAN MALAYSIA
         </span>
       </div>
@@ -222,19 +282,30 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto">
+        
         {/* SECTION 1: Maklumat Am */}
         <section className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
           <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div className="w-7 h-7 bg-primary-50 rounded-lg flex items-center justify-center text-primary-700 font-bold text-sm">
+            <div className="w-7 h-7 bg-primary-50 rounded-lg flex items-center justify-center text-[#006494] font-bold text-sm">
               1
             </div>
-            <h3 className="text-xs md:text-sm font-black text-slate-900 tracking-wider uppercase">
-              Bahagian A: Maklumat Am Institusi
-            </h3>
+            <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h3 className="text-xs md:text-sm font-black text-slate-900 tracking-wider uppercase">
+                Bahagian A: Maklumat Am Institusi
+              </h3>
+              <button
+                type="button"
+                onClick={suntikDataDemo}
+                className="self-start sm:self-auto text-[10px] font-black bg-amber-50 hover:bg-amber-100 text-amber-700 hover:text-amber-800 border border-amber-200 rounded-full px-3 py-1 cursor-pointer transition-colors duration-150 inline-flex items-center gap-1 uppercase tracking-wider"
+              >
+                <Sparkles className="w-3 h-3 text-amber-500" />
+                Suntik Data Demo (PRO MAX)
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5 md:col-span-2">
+            <div className="space-y-1.5 md:col-span-1 border-slate-200">
               <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">
                 Nama Penuh Institusi <span className="text-rose-600">*</span>
               </label>
@@ -244,15 +315,60 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
                 value={namaInstitusi}
                 onChange={(e) => {
                   setNamaInstitusi(e.target.value);
-                  setErrors((prev) => ({ ...prev, namaInstitusi: "" }));
+                  setAmErrors((prev) => ({ ...prev, namaInstitusi: "" }));
                 }}
                 className={`w-full bg-slate-50 border text-slate-900 text-sm rounded-xl px-3 py-2.5 font-semibold focus:bg-white focus:outline-hidden ${
-                  errors.namaInstitusi ? "border-red-500 focus:border-red-500" : "border-slate-200 focus:border-primary-500"
+                  amErrors.namaInstitusi ? "border-red-500 focus:border-red-500" : "border-slate-200 focus:border-primary-500"
                 }`}
                 required
               />
-              <FieldError error={errors.namaInstitusi} />
+              <FieldError error={amErrors.namaInstitusi} />
             </div>
+
+            <div className="space-y-1.5 md:col-span-1">
+              <label className="text-xs font-black text-slate-500 uppercase tracking-wider block">
+                Kod Institusi <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="cth. J0123 / KPM-SW-001"
+                value={kodInstitusi}
+                onChange={(e) => {
+                  setKodInstitusi(e.target.value);
+                  setAmErrors((prev) => ({ ...prev, kodInstitusi: "" }));
+                }}
+                className={`w-full bg-slate-50 border text-slate-900 text-sm rounded-xl px-3 py-2.5 font-semibold focus:bg-white focus:outline-hidden ${
+                  amErrors.kodInstitusi ? "border-red-500 focus:border-red-500" : "border-slate-200 focus:border-primary-500"
+                }`}
+                required
+              />
+              <FieldError error={amErrors.kodInstitusi} />
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 2: Maklumat Pemilik & Pengurusan (Informasi Hubungan) */}
+        <section className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+            <div className="w-7 h-7 bg-primary-50 rounded-lg flex items-center justify-center text-[#006494] font-bold text-sm">
+              2
+            </div>
+            <h3 className="text-xs md:text-sm font-black text-slate-900 tracking-wider uppercase flex items-center gap-2">
+              <User className="w-4 h-4 text-[#006494]" />
+              Bahagian B: Maklumat Pemilik & Pengurusan (Domain 01)
+            </h3>
+          </div>
+
+          <div className="bg-sky-50/50 border border-[#006494]/15 rounded-xl p-5 text-left space-y-2">
+            <h4 className="text-xs font-black text-[#006494] uppercase tracking-wider">
+              Informasi Pendaftaran Awal
+            </h4>
+            <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+              Maklumat Pemilik & Pengurusan (Domain 01) akan diisi oleh pengusaha institusi sendiri secara terperinci di dalam Dashboard/Portal Institusi setelah akaun diwujudkan.
+            </p>
+            <p className="text-[10px] text-amber-600 font-extrabold uppercase tracking-wider block">
+              PPD hanya mewujudkan profil shell awal bagi memudahkan proses penyelarasan dan pautan pertama pengusaha.
+            </p>
           </div>
         </section>
 
@@ -271,7 +387,7 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto px-8 py-3 text-xs font-black bg-primary-800 hover:bg-primary-900 disabled:bg-primary-300 text-white rounded-full transition-all duration-200 cursor-pointer text-center flex items-center justify-center gap-2 uppercase tracking-widest border border-primary-900"
+            className="w-full sm:w-auto px-8 py-3 text-xs font-black bg-[#006494] hover:bg-[#004f76] disabled:bg-[#006494]/40 text-white rounded-full transition-all duration-200 cursor-pointer text-center flex items-center justify-center gap-2 uppercase tracking-widest border border-sky-900"
           >
             {loading ? (
               <>
@@ -279,11 +395,11 @@ export function BorangPendaftaran({ onBack }: BorangPendaftaranProps) {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                <span>Hantar Borang...</span>
+                <span>Mendaftarkan Asas...</span>
               </>
             ) : (
               <>
-                <span>Hantar Borang Pendaftaran</span>
+                <span>Hantar Pendaftaran Asas</span>
                 <Check className="w-3.5 h-3.5" />
               </>
             )}

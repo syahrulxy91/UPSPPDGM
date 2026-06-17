@@ -20,9 +20,11 @@ import {
 import { toast } from "react-hot-toast";
 import { getInstitusiList } from "../../institusi/services/institusiService";
 import { InstitusiRecord } from "../../../types/institusi";
+import { createPematuhanRecord } from "../services/pematuhanService";
+import { auth } from "../../../lib/firebase";
 
 interface BorangPematuhanProps {
-  onBack: () => void;
+  onBack: (shouldRefresh?: boolean) => void;
   preselectedInstId?: string | null;
 }
 
@@ -198,21 +200,81 @@ export function BorangPematuhan({ onBack, preselectedInstId }: BorangPematuhanPr
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedInstId) {
+    if (!selectedInstId || !selectedInst) {
       toast.error("Sila pilih institusi rujukan terlebih dahulu!");
       return;
     }
 
     setLoading(true);
 
-    // Simulate registration in DB
-    setTimeout(() => {
+    try {
+      // Determine jenisDokumen based on PBT, Bomba and KKM status
+      const hasAllClear = pbtStatus === "Ada Kelulusan" && bombaStatus === "Ada Kelulusan" && kesihatanStatus === "Ada Kelulusan";
+      const jenisDokumenStr = hasAllClear 
+        ? "Kelulusan Bersepadu (PBT, Bomba, KKM)" 
+        : `Surat Perakuan Pematuhan Bersyarat (${[
+            pbtStatus !== "Ada Kelulusan" ? "PBT" : "",
+            bombaStatus !== "Ada Kelulusan" ? "Bomba" : "",
+            kesihatanStatus !== "Ada Kelulusan" ? "KKM" : ""
+          ].filter(Boolean).join(", ")})`;
+
+      const recordToSave = {
+        institusiId: selectedInstId,
+        namaInstitusi: selectedInst.namaInstitusi,
+        kategori: selectedInst.kategori,
+        zon: selectedInst.zon || "Bandar Gua Musang",
+        jenisDokumen: jenisDokumenStr,
+        statusDokumen: statusAkhir as any, // "lengkap" | "tidak lengkap" | "hampir luput"
+        tarikhTamat: pbtTarikhLuput || bombaTarikhLuput || kesihatanTarikhLuput || "",
+        tindakanSegera: statusAkhir === "tidak lengkap" || jenisIsu !== "tiada",
+        pegawai: namaPegawai || "Encik Ahmad Sukri Bin Ramli",
+        createdBy: auth.currentUser?.email || "En. Ahmad Sukri (Pegawai SPS)",
+        
+        // Save detailed fields for historical audit as requested
+        pbtStatus,
+        pbtNoRujukan,
+        pbtTarikhMohon,
+        pbtTarikhLulus,
+        pbtTarikhLuput,
+        pbtCatatan,
+        bombaStatus,
+        bombaNoRujukan,
+        bombaTarikhLawatan,
+        bombaTarikhLulus,
+        bombaTarikhLuput,
+        bombaCatatan,
+        kesihatanStatus,
+        kesihatanNoRujukan,
+        kesihatanTarikhPeriksa,
+        kesihatanTarikhLulus,
+        kesihatanTarikhLuput,
+        kesihatanCatatan,
+        dokumenDiterima,
+        catatanDokumenBelumLengkap,
+        linkDokumen,
+        jenisIsu,
+        tahapKeutamaan,
+        tindakanPembetulan,
+        tarikhAkhirTindakan,
+        statusTindakan,
+        jawatanPegawai,
+        tarikhSemakan,
+        keputusanSemakan,
+        ulasanAkhir
+      };
+
+      await createPematuhanRecord(recordToSave);
+      
       setLoading(false);
       setSuccess(true);
       toast.success("Borang semakan pematuhan rasmi institusi berjaya disimpan!");
-    }, 1200);
+    } catch (err: any) {
+      setLoading(false);
+      console.error("Gagal menyimpan borang pematuhan:", err);
+      toast.error("Gagal menyimpan rekod pematuhan ke Firestore. Sila cuba lagi.");
+    }
   };
 
   if (success) {
@@ -275,7 +337,7 @@ export function BorangPematuhan({ onBack, preselectedInstId }: BorangPematuhanPr
 
         <div className="border-t border-slate-100 pt-6 flex flex-col sm:flex-row justify-center gap-3">
           <button
-            onClick={onBack}
+            onClick={() => onBack(true)}
             className="px-6 py-2.5 text-sm font-black bg-primary-800 hover:bg-primary-900 text-white rounded-full transition-all duration-200 cursor-pointer shadow-xs border border-primary-900 uppercase tracking-wider"
           >
             Kembali ke Ringkasan
@@ -296,7 +358,7 @@ export function BorangPematuhan({ onBack, preselectedInstId }: BorangPematuhanPr
       {/* Header and Back controller */}
       <div className="flex items-center justify-between border-b border-slate-200/80 pb-4">
         <button
-          onClick={onBack}
+          onClick={() => onBack(false)}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-full transition-all cursor-pointer shadow-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5 text-slate-400 font-bold" />
@@ -891,7 +953,7 @@ export function BorangPematuhan({ onBack, preselectedInstId }: BorangPematuhanPr
         <div className="flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-slate-200/80 pt-6">
           <button
             type="button"
-            onClick={onBack}
+            onClick={() => onBack(false)}
             className="w-full sm:w-auto px-6 py-3 text-sm font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-full transition-all duration-200 cursor-pointer text-center uppercase tracking-wider"
           >
             Batal Semakan

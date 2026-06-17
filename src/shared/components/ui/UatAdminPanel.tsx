@@ -262,7 +262,7 @@ export function UatAdminPanel() {
           id="uat-toggle-btn"
         >
           <HelpCircle className="w-4 h-4 text-emerald-400" />
-          <span>Status UAT & Kesiagaan</span>
+          <span>Console UAT</span>
           {completedCount > 0 && (
             <span className="bg-[#01696f] text-[10px] px-2 py-0.5 rounded-full font-black text-white shrink-0">
               {completedCount}/{UAT_ITEMS.length}
@@ -291,12 +291,6 @@ export function UatAdminPanel() {
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
           
           <div className="relative z-10 space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#01696f]/40 text-[#4bf3fc] text-[9px] font-black uppercase tracking-wider border border-[#01696f]/50">
-                Audit Kualiti
-              </span>
-              <span className="text-[9px] text-slate-300 font-mono font-bold tracking-tight">V1.5 (PRO STABLE)</span>
-            </div>
             <h3 className="text-base font-black text-white">Console Kesiagaan & UAT</h3>
             <p className="text-[11px] text-slate-300 font-light">SPS PPD Gua Musang • Verification Engine</p>
           </div>

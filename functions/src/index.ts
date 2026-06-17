@@ -1,8 +1,10 @@
-import { initializeApp } from "firebase-admin/app";
+import * as admin from "firebase-admin";
 
 // Initialize the Firebase Admin SDK once for the entire backend application,
 // which facilitates bypass of firestore security rules when updating documents server-to-server.
-initializeApp();
+if (admin.apps.length === 0) {
+  admin.initializeApp();
+}
 
 // 1. Two-way synchronization on form status transitions
 export { syncBorangToInstitusiTrigger } from "./borangSync";
@@ -15,9 +17,20 @@ export { runDailyReminderAnalyzer, triggerReminderAnalyzerManual } from "./remin
 
 // 4. Institution real Firebase Auth administrative flows
 export {
-  createInstitutionAuthAccount,
-  resetInstitutionPassword,
-  setInstitutionAccessState,
-  migrateInstitutionCredentialToAuth
+  bindInstitutionGoogleEmail,
+  resetInstitutionGoogleEmail,
+  bindOrValidateInstitutionAccess,
+  resetInstitutionBinding,
+  updateInstitutionActiveStatus,
+  deleteInstitutionCompletely,
+  getPublicInstitutionsList,
+  lookupBoundInstitutionForGoogleUser
 } from "./institutionAuth";
+
+// 5. Automated Institusi -> Public Synchronization
+export {
+  onInstitusiCreated,
+  onInstitusiUpdated,
+  onInstitusiDeleted
+} from "./institusiSync";
 

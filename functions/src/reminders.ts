@@ -14,7 +14,7 @@ async function runReminderEngine(): Promise<{ created: number; resolved: number 
 
   // 1. Fetch all borang records
   const borangSnap = await db.collection("borang").get();
-  const activeBorangs = borangSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const activeBorangs = borangSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as any);
 
   // 2. Fetch all existing unresolved reminders to prevent duplicates
   const reminderSnap = await db.collection("reminders").where("resolved", "==", false).get();

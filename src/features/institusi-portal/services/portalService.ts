@@ -35,6 +35,11 @@ export interface GuruRecord {
   jawatan: string;
   subjek: string;
   status: "Aktif" | "Cuti" | "Keluar";
+  jantina?: "Lelaki" | "Perempuan" | "Lain-lain" | string;
+  noPermit?: string;
+  tarikhMulaPermit?: string;
+  tarikhTamatPermit?: string;
+  tahapPendidikanSemasa?: string;
 }
 
 export interface ProgramRecord {
